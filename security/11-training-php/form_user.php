@@ -4,58 +4,156 @@ session_start();
 require_once 'models/UserModel.php';
 $userModel = new UserModel();
 
-$user = NULL; //Add new user
+// Mã hóa user_id
+function encode_id($id) {
+    return base64_encode($id);
+}
+
+// Giải mã user_id
+function decode_id($encoded_id) {
+    $decoded = base64_decode($encoded_id); 
+    if (is_numeric($decoded)) {
+        return $decoded;
+    }
+    return false;
+}
+
+// Validation functions
+function validateName($name) {
+    if (empty($name)) {
+        return "Name is required";
+    }
+    if (!preg_match('/^[A-Za-z0-9]{5,15}$/', $name)) {
+        return "Name must be 5-15 characters long and contain only A-Z, a-z, 0-9";
+    }
+    return null;
+}
+
+function validatePassword($password) {
+    if (empty($password)) {
+        return "Password is required";
+    }
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~!@#$%^&*()])[A-Za-z\d~!@#$%^&*()]{5,10}$/', $password)) {
+        return "Password must be 5-10 characters long and include lowercase, uppercase, number, and special character (~!@#$%^&*())";
+    }
+    return null;
+}
+
+$user = NULL;
 $_id = NULL;
+$version = 1;
+$nameError = $passwordError = null;
 
 if (!empty($_GET['id'])) {
-    $_id = $_GET['id'];
-    $user = $userModel->findUserById($_id);//Update existing user
+    $_id = decode_id($_GET['id']);
+    if ($_id !== false) {
+        $user = $userModel->findUserById($_id);
+        if (!empty($user)) {
+            $version = $user[0]['version'];
+        }
+    } else {
+        echo '<div class="alert alert-danger">Invalid user ID</div>';
+        exit;
+    }
 }
-
 
 if (!empty($_POST['submit'])) {
-
+    $result = null; // Biến lưu kết quả
+    print_r($_POST);
     if (!empty($_id)) {
-        $userModel->updateUser($_POST);
+        $result = $userModel->updateUser($_POST); // Cập nhật người dùng
     } else {
-        $userModel->insertUser($_POST);
+        $result = $userModel->insertUser($_POST); // Thêm người dùng mới
     }
-    header('location: list_users.php');
-}
 
+    // Kiểm tra xem có lỗi không
+    if (isset($result['error'])) {
+        $_SESSION['error'] = $result['error']; // Lưu thông báo lỗi vào session
+        header('Location: form_user.php?id=' . $_GET['id']); // Chuyển hướng về trang hiện tại
+        exit();
+    } else {
+        header('location: list_users.php'); // Nếu thành công, chuyển hướng đến danh sách người dùng
+        exit();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>User form</title>
     <?php include 'views/meta.php' ?>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-    <?php include 'views/header.php'?>
+    <?php include 'views/header.php' ?>
     <div class="container">
-
-            <?php if ($user || !isset($_id)) { ?>
-                <div class="alert alert-warning" role="alert">
-                    User form
+        <?php if ($user || !isset($_id)) { ?>
+            <div class="alert alert-warning" role="alert">
+                User form
+            </div>
+            <form method="POST" onsubmit="return validateForm()" name="userForm">
+                <input type="hidden" name="id" value="<?php echo encode_id($_id); ?>">
+                <input type="hidden" name="version" value="<?php echo $version ?>">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input class="form-control" id="name" name="name" placeholder="Name" value='<?php if (!empty($user[0]['name'])) echo htmlspecialchars($user[0]['name']) ?>' oninput="validateName()">
+                    <div id="nameError" class="error-message"></div>
                 </div>
-                <form method="POST">
-                    <input type="hidden" name="id" value="<?php echo $_id ?>">
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <input class="form-control" name="name" placeholder="Name" value='<?php if (!empty($user[0]['name'])) echo $user[0]['name'] ?>'>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" name="password" class="form-control" placeholder="Password">
-                    </div>
-
-                    <button type="submit" name="submit" value="submit" class="btn btn-primary">Submit</button>
-                </form>
-            <?php } else { ?>
-                <div class="alert alert-success" role="alert">
-                    User not found!
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" oninput="validatePassword()">
+                    <div id="passwordError" class="error-message"></div>
                 </div>
-            <?php } ?>
+                <button type="submit" name="submit" value="submit" class="btn btn-primary">Submit</button>
+            </form>
+        <?php } else { ?>
+            <div class="alert alert-success" role="alert">
+                User not found!
+            </div>
+        <?php } ?>
     </div>
+    
+    <script>
+    function validateName() {
+        var name = document.getElementById('name').value;
+        var nameError = document.getElementById('nameError');
+        var nameRegex = /^[A-Za-z0-9]{5,15}$/;
+        
+        if (name === "") {
+            nameError.textContent = "Tên phải được điền";
+        } else if (!nameRegex.test(name)) {
+            nameError.textContent = "Tên phải dài 5-15 ký tự và chỉ chứa A-Z, a-z, 0-9";
+        } else {
+            nameError.textContent = "";
+        }
+    }
+
+    function validatePassword() {
+        var password = document.getElementById('password').value;
+        var passwordError = document.getElementById('passwordError');
+        var passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~!@#$%^&*()])[A-Za-z\d~!@#$%^&*()]{5,10}$/;
+        
+        if (password === "") {
+            passwordError.textContent = "Phải điền mật khẩu";
+        } else if (!passwordRegex.test(password)) {
+            passwordError.textContent = "Mật khẩu phải dài 5-10 ký tự và bao gồm chữ thường, chữ hoa, số và ký tự đặc biệt (~!@#$%^&*())";
+        } else {
+            passwordError.textContent = "";
+        }
+    }
+
+    function validateForm() {
+        validateName();
+        validatePassword();
+        return document.getElementById('nameError').textContent === "" && 
+               document.getElementById('passwordError').textContent === "";
+    }
+    </script>
 </body>
 </html>

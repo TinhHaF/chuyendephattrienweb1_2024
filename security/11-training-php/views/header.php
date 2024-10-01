@@ -61,3 +61,20 @@ if(!empty($_GET['keyword'])) {
         </div>
     <?php } ?>
 </div>
+
+<div class="container mt-4">
+    <?php if (!empty($keyword)): ?>
+        <?php if (!empty($results)): ?>
+            <h2>Kết quả tìm kiếm cho "<?php echo htmlspecialchars($keyword); ?>"</h2>
+            <ul class="list-group">
+                <?php foreach ($results as $user): ?>
+                    <li class="list-group-item"><?php echo htmlspecialchars($user['name']); ?></li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <div class="alert alert-info" role="alert">
+                Không tìm thấy kết quả nào cho "<?php echo htmlspecialchars($keyword); ?>". Vui lòng thử lại với từ khóa khác.
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+</div>
