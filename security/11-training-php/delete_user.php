@@ -1,34 +1,33 @@
-<!-- <?php
-require_once 'models/UserModel.php';
-$userModel = new UserModel();
-
-$user = NULL; //Add new user
-$id = NULL;
-
-if (!empty($_GET['id'])) {
-    $id = $_GET['id'];
-    $userModel->deleteUserById($id);//Delete existing user
-}
-header('location: list_users.php');
-?> -->
-
 <?php
 session_start();
 require_once 'models/UserModel.php';
 $userModel = new UserModel();
 
-$user = NULL; //Add new user
-// Kiểm tra CSRF token
+// Chỉ cho phép xóa thông qua phương thức POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['token']) {
+    // Kiểm tra CSRF token
+    if (!isset($_POST['token']) || !hash_equals($_SESSION['token'], $_POST['token'])) {
         die('Invalid CSRF token');
     }
 
-    $id = $_POST['id'] ?? NULL;
-    if ($id !== NULL) {
-        $userModel->deleteUserById($id); // Xóa người dùng
+    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+    if ($id !== false && $id !== null) {
+        // Thực hiện xóa người dùng
+        $userModel->deleteUserById($id);
+        $_SESSION['message'] = 'Xóa người dùng thành công';
+    } else {
+        $_SESSION['error'] = 'Invalid user ID.';
     }
-    header('location: list_users.php');
+
+    // Xóa token sau khi sử dụng
+    unset($_SESSION['token']);
+
+    // Chuyển hướng về trang danh sách người dùng
+    header('Location: list_users.php');
+    exit;
 } else {
-    header('location: list_users.php');
+    // Nếu không phải POST request, chuyển hướng về trang danh sách
+    $_SESSION['error'] = 'Invalid request method.';
+    header('Location: list_users.php');
+    exit;
 }

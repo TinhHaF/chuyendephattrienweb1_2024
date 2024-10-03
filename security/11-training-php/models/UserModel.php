@@ -49,14 +49,27 @@ class UserModel extends BaseModel {
      * @return mixed
      */
     public function updateUser($input) {
-        $sql = 'UPDATE users SET 
-                 name = "' . mysqli_real_escape_string(self::$_connection, $input['name']) .'", 
-                 password="'. md5($input['password']) .'"
-                WHERE id = ' . $input['id'];
-
-        $user = $this->update($sql);
-
-        return $user;
+        $name = mysqli_real_escape_string(self::$_connection, $input['name']);
+        
+        // Khởi tạo mảng các trường cần cập nhật
+        $updateFields = ["name = '$name'"];
+        
+        // Kiểm tra xem mật khẩu có được cung cấp hay không
+        if (!empty($input['password'])) {
+            $hashedPassword = md5($input['password']);
+            $updateFields[] = "password = '$hashedPassword'";
+        }
+        
+        // Tạo câu lệnh SQL động dựa trên các trường cần cập nhật
+        $sql = "UPDATE users SET " . implode(", ", $updateFields) . " WHERE id = " . (int)$input['id'];
+    
+        $result = $this->update($sql);
+    
+        if ($result) {
+            return ['success' => true];
+        } else {
+            return ['error' => 'Failed to update user'];
+        }
     }
 
     /**

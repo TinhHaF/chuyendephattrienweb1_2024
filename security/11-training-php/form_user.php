@@ -21,20 +21,20 @@ function decode_id($encoded_id) {
 // Validation functions
 function validateName($name) {
     if (empty($name)) {
-        return "Name is required";
+        return "Tên không được để trống";
     }
     if (!preg_match('/^[A-Za-z0-9]{5,15}$/', $name)) {
-        return "Name must be 5-15 characters long and contain only A-Z, a-z, 0-9";
+        return "Tên phải dài 5-15 ký tự và chỉ chứa A-Z, a-z, 0-9";
     }
     return null;
 }
 
 function validatePassword($password) {
     if (empty($password)) {
-        return "Password is required";
+        return "Phải điền mật khẩu";
     }
     if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~!@#$%^&*()])[A-Za-z\d~!@#$%^&*()]{5,10}$/', $password)) {
-        return "Password must be 5-10 characters long and include lowercase, uppercase, number, and special character (~!@#$%^&*())";
+        return "Mật khẩu phải dài 5-10 ký tự và bao gồm chữ thường, chữ hoa, số và ký tự đặc biệt (~!@#$%^&*())";
     }
     return null;
 }
@@ -59,9 +59,18 @@ if (!empty($_GET['id'])) {
 
 if (!empty($_POST['submit'])) {
     $result = null; // Biến lưu kết quả
-    print_r($_POST);
     if (!empty($_id)) {
-        $result = $userModel->updateUser($_POST); // Cập nhật người dùng
+        // Cập nhật người dùng
+        $updateData = [
+            'id' => $_id,
+            'name' => $_POST['name'],
+            'version' => $version
+        ];
+        // Chỉ cập nhật mật khẩu nếu nó được nhập
+        if (!empty($_POST['password'])) {
+            $updateData['password'] = $_POST['password'];
+        }
+        $result = $userModel->updateUser($updateData);
     } else {
         $result = $userModel->insertUser($_POST); // Thêm người dùng mới
     }
@@ -69,9 +78,10 @@ if (!empty($_POST['submit'])) {
     // Kiểm tra xem có lỗi không
     if (isset($result['error'])) {
         $_SESSION['error'] = $result['error']; // Lưu thông báo lỗi vào session
-        header('Location: form_user.php?id=' . $_GET['id']); // Chuyển hướng về trang hiện tại
+        header('Location: form_user.php' . (!empty($_id) ? '?id=' . encode_id($_id) : '')); // Chuyển hướng về trang hiện tại
         exit();
     } else {
+        $_SESSION['success'] = !empty($_id) ? 'User updated successfully' : 'User added successfully';
         header('location: list_users.php'); // Nếu thành công, chuyển hướng đến danh sách người dùng
         exit();
     }

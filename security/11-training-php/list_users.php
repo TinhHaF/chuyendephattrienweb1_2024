@@ -35,6 +35,15 @@ if (empty($_SESSION['token'])) {
 <body>
     <?php include 'views/header.php'?>
     <div class="container">
+        <?php if (isset($_SESSION['success'])) { ?>
+            <div class="alert alert-success">
+                <?php 
+                echo $_SESSION['success']; 
+                unset($_SESSION['success']); // Xóa thông báo sau khi hiển thị
+                ?>
+            </div>
+        <?php } ?>
+
         <?php if (!empty($users)) {?>
             <div class="alert alert-warning" role="alert">
                 List of users!
