@@ -1,0 +1,192 @@
+/* Animation */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.type-3045 {
+  /* Variables */
+  @font-family: "Raleway", Open Sans;
+  @primary-color: #4a4a4a;
+  @secondary-color: #9ca3af;
+  @highlight-color: #ef4444;
+  @title-color: #333;
+
+  /* Mixins */
+  .transition(@property: all, @duration: 0.3s, @timing: ease) {
+    transition: @property @duration @timing;
+  }
+
+  /* Styles */
+  body {
+    font-family: @font-family;
+    background-color: white;
+    color: @primary-color;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 4rem 0;
+  }
+
+  .title {
+    font-size: 44px;
+    font-weight: 300;
+    margin-bottom: 0px;
+    color: @title-color;
+    font-family: @font-family;
+  }
+
+  .description {
+    max-width: 800px;
+    font-family: @font-family;
+    margin: 0 auto 6rem;
+    font-weight: 400;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .col-md-4 {
+    text-align: center;
+    flex: 1 1 100%;
+    position: relative;
+    overflow: hidden;
+
+    img {
+      width: 400px;
+      height: 700px;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      .transition();
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transform: translateY(-100%);
+      .transition();
+    }
+
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      opacity: 0;
+      /* Ẩn các biểu tượng mặc định */
+      transition: opacity 0.3s ease;
+      position: absolute;
+      top: 45%;
+      left: calc(100% - 75%);
+      transform: translate(-50%, -50%);
+      /* Định vị chính xác giữa hình ảnh */
+    }
+    
+
+    a {
+      display: inline-block;
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: @highlight-color;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      .transition();
+    }
+
+    &:hover {
+      img {
+        filter: brightness(0.3);
+      }
+
+      .overlay {
+        opacity: 1;
+        /* Hiện lớp phủ khi hover */
+        animation: slide-down .7s forwards;
+        /* Hiệu ứng animation cho lớp phủ */
+        height: 85.5%;
+      }
+
+      .social-icons {
+        opacity: 1;
+        /* Hiện các biểu tượng khi hover */
+        animation: slide-down .7s forwards;
+        /* Hiệu ứng animation cho biểu tượng */
+        transform: translate(-50%);
+      }
+
+      p {
+        color: white;
+      }
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    p {
+      color: @secondary-color;
+    }
+  }
+
+  .col-md-4:hover {
+    background-color: @highlight-color;
+    color: white;
+  }
+  @media (max-width: 1024px) {
+    .col-md-4 {
+      img {
+        width: 100%;
+        height: 700px;
+      }
+  
+      .social-icons {
+        top: 50%; /* Adjust positioning for this resolution */
+        left: 30%;
+        transform: translate(-50%, -50%); /* Centers the social icons more accurately */
+      }
+  
+    
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .col-md-4 {
+      flex: 1 1 calc(33.333% - 2rem);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .col-md-4 {
+      position: relative;
+
+      img {
+        width: 100%;
+        height: 700px;
+      }
+    }
+  }
+
+}
